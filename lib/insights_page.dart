@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'backend_url.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class InsightsPage extends StatelessWidget {
   const InsightsPage({super.key});
@@ -9,6 +12,7 @@ class InsightsPage extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     // Example backend data (replace with your API data)
+
     final regionAqiList = [
       RegionAqi(
         name: "South Delhi",
@@ -36,7 +40,8 @@ class InsightsPage extends StatelessWidget {
     // Example AQI and health advisory logic
     final int currentAqi = 186;
     final String aqiStatus = "Unhealthy";
-    final String healthAdvisory = "Active children and adults, and people with respiratory disease, such as asthma, should avoid prolonged outdoor exertion.";
+    final String healthAdvisory =
+        "Active children and adults, and people with respiratory disease, such as asthma, should avoid prolonged outdoor exertion.";
     final Color aqiColor = Colors.red.shade600;
 
     return SingleChildScrollView(
@@ -58,7 +63,11 @@ class InsightsPage extends StatelessWidget {
               ),
               Row(
                 children: [
-                  Icon(Icons.location_on, size: 18, color: isDark ? Colors.white70 : Colors.black54),
+                  Icon(
+                    Icons.location_on,
+                    size: 18,
+                    color: isDark ? Colors.white70 : Colors.black54,
+                  ),
                   const SizedBox(width: 4),
                   Text(
                     'Delhi, India',
@@ -159,7 +168,13 @@ class InsightsPage extends StatelessWidget {
             no2Data: [25, 28, 30, 40, 45, 50, 48, 44, 42],
             o3Data: [18, 20, 22, 28, 32, 35, 33, 31, 30],
             timeLabels: [
-              "00:00", "04:00", "08:00", "12:00", "16:00", "20:00", "24:00"
+              "00:00",
+              "04:00",
+              "08:00",
+              "12:00",
+              "16:00",
+              "20:00",
+              "24:00",
             ],
           ),
           // Regional Comparison
@@ -192,7 +207,8 @@ class CurrentAqiAdvisoryWidget extends StatefulWidget {
   });
 
   @override
-  State<CurrentAqiAdvisoryWidget> createState() => _CurrentAqiAdvisoryWidgetState();
+  State<CurrentAqiAdvisoryWidget> createState() =>
+      _CurrentAqiAdvisoryWidgetState();
 }
 
 class _CurrentAqiAdvisoryWidgetState extends State<CurrentAqiAdvisoryWidget>
@@ -207,9 +223,10 @@ class _CurrentAqiAdvisoryWidgetState extends State<CurrentAqiAdvisoryWidget>
       vsync: this,
       duration: const Duration(seconds: 2),
     )..repeat(reverse: true);
-    _blink = Tween<double>(begin: 1.0, end: 0.5).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _blink = Tween<double>(
+      begin: 1.0,
+      end: 0.5,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -314,7 +331,11 @@ class _CurrentAqiAdvisoryWidgetState extends State<CurrentAqiAdvisoryWidget>
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.warning_amber_rounded, color: Colors.red, size: 28),
+                const Icon(
+                  Icons.warning_amber_rounded,
+                  color: Colors.red,
+                  size: 28,
+                ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -367,9 +388,7 @@ class _TabChip extends StatelessWidget {
           ),
         ),
         backgroundColor: selected ? Colors.green : Colors.grey.shade200,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
       ),
     );
@@ -437,10 +456,7 @@ class _PollutantCard extends StatelessWidget {
               const SizedBox(width: 4),
               Text(
                 unit,
-                style: const TextStyle(
-                  fontSize: 13,
-                  color: Colors.black54,
-                ),
+                style: const TextStyle(fontSize: 13, color: Colors.black54),
               ),
             ],
           ),
@@ -505,10 +521,7 @@ class PollutionTrendsCard extends StatelessWidget {
             children: [
               const Text(
                 'Pollution Trends',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                ),
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
               ),
               Flexible(
                 child: Row(
@@ -634,11 +647,7 @@ class _TrendsGraphPainter extends CustomPainter {
 
     for (int i = 0; i <= ySteps; i++) {
       final y = topPadding + chartHeight - (chartHeight / ySteps) * i;
-      canvas.drawLine(
-        Offset(leftPadding, y),
-        Offset(size.width, y),
-        gridPaint,
-      );
+      canvas.drawLine(Offset(leftPadding, y), Offset(size.width, y), gridPaint);
       final label = (yMin + yInterval * i).toInt().toString();
       final tp = TextPainter(
         text: TextSpan(text: label, style: textStyle),
@@ -666,7 +675,10 @@ class _TrendsGraphPainter extends CustomPainter {
       final points = <Offset>[];
       for (int i = 0; i < data.length; i++) {
         final x = leftPadding + (chartWidth) * i / (data.length - 1);
-        final y = topPadding + chartHeight - ((data[i] - yMin) / (yMax - yMin)) * chartHeight;
+        final y =
+            topPadding +
+            chartHeight -
+            ((data[i] - yMin) / (yMax - yMin)) * chartHeight;
         points.add(Offset(x, y));
       }
       final linePaint = Paint()
@@ -687,7 +699,8 @@ class _TrendsGraphPainter extends CustomPainter {
 
       // Fill area under curve if fillColor is provided
       if (fillColor != null) {
-        final fillPath = Path()..moveTo(points.first.dx, chartHeight + topPadding);
+        final fillPath = Path()
+          ..moveTo(points.first.dx, chartHeight + topPadding);
         for (final p in points) {
           fillPath.lineTo(p.dx, p.dy);
         }
@@ -695,7 +708,9 @@ class _TrendsGraphPainter extends CustomPainter {
         fillPath.close();
         canvas.drawPath(
           fillPath,
-          Paint()..color = fillColor.withOpacity(0.15)..style = PaintingStyle.fill,
+          Paint()
+            ..color = fillColor.withOpacity(0.15)
+            ..style = PaintingStyle.fill,
         );
       }
     }
@@ -745,10 +760,7 @@ class _LegendDot extends StatelessWidget {
     return Container(
       width: 10,
       height: 10,
-      decoration: BoxDecoration(
-        color: color,
-        shape: BoxShape.circle,
-      ),
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
     );
   }
 }
@@ -791,10 +803,7 @@ class RegionalComparisonCard extends StatelessWidget {
         children: [
           const Text(
             'Regional Comparison',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
-            ),
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
           ),
           const SizedBox(height: 14),
           // Map placeholder with AQI
@@ -807,7 +816,9 @@ class RegionalComparisonCard extends StatelessWidget {
                   color: Colors.grey.shade200,
                   borderRadius: BorderRadius.circular(14),
                   image: const DecorationImage(
-                    image: AssetImage('assets/map_placeholder.png'), // Replace with your map asset
+                    image: AssetImage(
+                      'assets/map_placeholder.png',
+                    ), // Replace with your map asset
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -816,7 +827,10 @@ class RegionalComparisonCard extends StatelessWidget {
                 left: 24,
                 top: 40,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(22),
@@ -831,7 +845,10 @@ class RegionalComparisonCard extends StatelessWidget {
                   child: Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.red.shade100,
                           borderRadius: BorderRadius.circular(12),
@@ -882,7 +899,10 @@ class RegionalComparisonCard extends StatelessWidget {
                 child: Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: region.color.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(12),
@@ -970,10 +990,7 @@ class HealthImpactAnalysisCard extends StatelessWidget {
         children: [
           const Text(
             'Health Impact Analysis',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
-            ),
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
           ),
           const SizedBox(height: 14),
           LayoutBuilder(
@@ -1007,9 +1024,7 @@ class HealthImpactAnalysisCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   ConstrainedBox(
-                    constraints: BoxConstraints(
-                      maxWidth: 120,
-                    ),
+                    constraints: BoxConstraints(maxWidth: 120),
                     child: ElevatedButton(
                       onPressed: () {
                         // TODO: Implement view details action
@@ -1022,7 +1037,10 @@ class HealthImpactAnalysisCard extends StatelessWidget {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(18),
                         ),
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
                         elevation: 0,
                       ),
                       child: const FittedBox(
@@ -1117,10 +1135,7 @@ class _HealthInfoTile extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   description,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: Colors.black87,
-                  ),
+                  style: const TextStyle(fontSize: 13, color: Colors.black87),
                 ),
               ],
             ),

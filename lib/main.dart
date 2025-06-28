@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'profile_page.dart';
 import 'insights_page.dart';
 import 'chatbot_page.dart';
+import 'backend_url.dart';
 
 void main() {
   runApp(const PollutionVIZApp());
@@ -20,8 +21,9 @@ class _PollutionVIZAppState extends State<PollutionVIZApp> {
 
   void _toggleTheme() {
     setState(() {
-      _themeMode =
-          _themeMode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
+      _themeMode = _themeMode == ThemeMode.light
+          ? ThemeMode.dark
+          : ThemeMode.light;
     });
   }
 
@@ -48,9 +50,7 @@ class _PollutionVIZAppState extends State<PollutionVIZApp> {
         textTheme: GoogleFonts.montserratTextTheme(
           ThemeData(brightness: Brightness.dark).textTheme,
         ),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF181A20),
-        ),
+        appBarTheme: const AppBarTheme(backgroundColor: Color(0xFF181A20)),
         bottomNavigationBarTheme: const BottomNavigationBarThemeData(
           backgroundColor: Color(0xFF23242B),
           selectedItemColor: Colors.white,
@@ -92,10 +92,7 @@ class _MainNavigationState extends State<MainNavigation> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       setState(() {
         final mq = MediaQuery.of(context);
-        _chatbotOffset = Offset(
-          mq.size.width - 80,
-          mq.size.height - 180,
-        );
+        _chatbotOffset = Offset(mq.size.width - 80, mq.size.height - 180);
       });
     });
   }
@@ -219,8 +216,10 @@ class _MainNavigationState extends State<MainNavigation> {
             ),
             actions: [
               IconButton(
-                icon: Icon(Icons.location_on_outlined,
-                    color: isDark ? Colors.white70 : Colors.black54),
+                icon: Icon(
+                  Icons.location_on_outlined,
+                  color: isDark ? Colors.white70 : Colors.black54,
+                ),
                 tooltip: "My Location",
                 onPressed: () {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -237,8 +236,10 @@ class _MainNavigationState extends State<MainNavigation> {
                 onPressed: widget.onToggleTheme,
               ),
               IconButton(
-                icon: Icon(Icons.download_rounded,
-                    color: isDark ? Colors.white70 : Colors.black54),
+                icon: Icon(
+                  Icons.download_rounded,
+                  color: isDark ? Colors.white70 : Colors.black54,
+                ),
                 tooltip: "Export Data",
                 onPressed: () => _showExportDialog(context),
               ),
@@ -249,7 +250,9 @@ class _MainNavigationState extends State<MainNavigation> {
           bottomNavigationBar: BottomNavigationBar(
             currentIndex: _selectedIndex,
             selectedItemColor: isDark ? Colors.white : Colors.green,
-            unselectedItemColor: isDark ? const Color(0xFFB0B3B8) : Colors.black54,
+            unselectedItemColor: isDark
+                ? const Color(0xFFB0B3B8)
+                : Colors.black54,
             backgroundColor: isDark ? const Color(0xFF23242B) : Colors.white,
             onTap: (index) {
               setState(() {
@@ -279,9 +282,7 @@ class _MainNavigationState extends State<MainNavigation> {
               fontFamily: 'Montserrat',
               fontWeight: FontWeight.w600,
             ),
-            unselectedLabelStyle: TextStyle(
-              fontFamily: 'Montserrat',
-            ),
+            unselectedLabelStyle: TextStyle(fontFamily: 'Montserrat'),
           ),
         ),
         // Movable Chatbot Bubble
@@ -339,11 +340,7 @@ class _ChatbotBubble extends StatelessWidget {
           ],
         ),
         child: Center(
-          child: Icon(
-            Icons.smart_toy_rounded,
-            color: Colors.white,
-            size: 32,
-          ),
+          child: Icon(Icons.smart_toy_rounded, color: Colors.white, size: 32),
         ),
       ),
     );
@@ -402,10 +399,7 @@ class PlaceholderPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Text(
-        title,
-        style: Theme.of(context).textTheme.headlineMedium,
-      ),
+      child: Text(title, style: Theme.of(context).textTheme.headlineMedium),
     );
   }
 }

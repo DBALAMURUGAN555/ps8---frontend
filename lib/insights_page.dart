@@ -5,6 +5,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'datamodels.dart';
 
+const String baseURL = 'http://pollutionviz-3hta.onrender.com';
+
 class InsightsPage extends StatefulWidget {
   const InsightsPage({super.key});
 
@@ -14,11 +16,270 @@ class InsightsPage extends StatefulWidget {
 
 class _InsightsPageState extends State<InsightsPage> {
   late Future<Map<String, dynamic>?> _dashboardData;
+  late Future<TrendsData> _trendsData;
+  String _selectedRange = 'weekly';
 
   @override
   void initState() {
     super.initState();
     _dashboardData = fetchDashboardData();
+    _trendsData = _fetchTrendsData(_selectedRange);
+  }
+
+  Future<TrendsData> _fetchTrendsData(String range) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseURL/getTrends?range=$range'),
+      );
+
+      if (response.statusCode == 200) {
+        final jsonData = json.decode(response.body);
+        return TrendsData.fromJson(jsonData);
+      } else {
+        return _getStaticTrendsData(range);
+      }
+    } catch (e) {
+      return _getStaticTrendsData(range);
+    }
+  }
+
+  TrendsData _getStaticTrendsData(String range) {
+    if (range == 'weekly') {
+      return TrendsData(
+        range: 'weekly',
+        data: [
+          TrendsMeasurement(
+            date: "2025-06-26",
+            pm25: 112,
+            pm10: 46,
+            no2: 33.6,
+            co: 0.896,
+            o3: 28,
+          ),
+          TrendsMeasurement(
+            date: "2025-06-27",
+            pm25: 125,
+            pm10: 47,
+            no2: 37.5,
+            co: 1,
+            o3: 31.2,
+          ),
+          TrendsMeasurement(
+            date: "2025-06-28",
+            pm25: 138,
+            pm10: 57,
+            no2: 41.4,
+            co: 1.104,
+            o3: 34.5,
+          ),
+          TrendsMeasurement(
+            date: "2025-06-29",
+            pm25: 99,
+            pm10: 47,
+            no2: 29.7,
+            co: 0.792,
+            o3: 24.8,
+          ),
+          TrendsMeasurement(
+            date: "2025-06-30",
+            pm25: 95,
+            pm10: 47,
+            no2: 28.5,
+            co: 0.76,
+            o3: 23.8,
+          ),
+          TrendsMeasurement(
+            date: "2025-07-01",
+            pm25: 139,
+            pm10: 66,
+            no2: 41.7,
+            co: 1.112,
+            o3: 34.8,
+          ),
+          TrendsMeasurement(
+            date: "2025-07-02",
+            pm25: 139,
+            pm10: 68,
+            no2: 41.7,
+            co: 1.112,
+            o3: 34.8,
+          ),
+        ],
+        units: {
+          "pm25": "µg/m³",
+          "pm10": "µg/m³",
+          "no2": "ppb",
+          "co": "ppm",
+          "o3": "ppb",
+        },
+      );
+    } else if (range == 'monthly') {
+      return TrendsData(
+        range: 'monthly',
+        data: [
+          TrendsMeasurement(
+            date: "2024-08",
+            pm25: 99.9,
+            pm10: 42.9,
+            no2: 30.0,
+            co: 10.0,
+            o3: 20.0,
+          ),
+          TrendsMeasurement(
+            date: "2024-09",
+            pm25: 81.4,
+            pm10: 34.9,
+            no2: 24.4,
+            co: 8.1,
+            o3: 16.3,
+          ),
+          TrendsMeasurement(
+            date: "2024-10",
+            pm25: 78.2,
+            pm10: 33.5,
+            no2: 23.4,
+            co: 7.8,
+            o3: 15.6,
+          ),
+          TrendsMeasurement(
+            date: "2024-11",
+            pm25: 90.6,
+            pm10: 38.8,
+            no2: 27.2,
+            co: 9.1,
+            o3: 18.1,
+          ),
+          TrendsMeasurement(
+            date: "2024-12",
+            pm25: 87.4,
+            pm10: 37.5,
+            no2: 26.2,
+            co: 8.7,
+            o3: 17.5,
+          ),
+          TrendsMeasurement(
+            date: "2025-01",
+            pm25: 110.2,
+            pm10: 47.2,
+            no2: 33.1,
+            co: 11.0,
+            o3: 22.0,
+          ),
+          TrendsMeasurement(
+            date: "2025-02",
+            pm25: 136.9,
+            pm10: 58.7,
+            no2: 41.1,
+            co: 13.7,
+            o3: 27.4,
+          ),
+          TrendsMeasurement(
+            date: "2025-03",
+            pm25: 134.3,
+            pm10: 57.6,
+            no2: 40.3,
+            co: 13.4,
+            o3: 26.9,
+          ),
+          TrendsMeasurement(
+            date: "2025-04",
+            pm25: 154.6,
+            pm10: 66.3,
+            no2: 46.4,
+            co: 15.5,
+            o3: 30.9,
+          ),
+          TrendsMeasurement(
+            date: "2025-05",
+            pm25: 129.8,
+            pm10: 55.6,
+            no2: 38.9,
+            co: 13.0,
+            o3: 26.0,
+          ),
+          TrendsMeasurement(
+            date: "2025-06",
+            pm25: 113.8,
+            pm10: 48.8,
+            no2: 39.3,
+            co: 13.1,
+            o3: 26.2,
+          ),
+        ],
+        units: {
+          "pm25": "µg/m³",
+          "pm10": "µg/m³",
+          "no2": "ppb",
+          "co": "ppm",
+          "o3": "ppb",
+        },
+      );
+    } else {
+      return TrendsData(
+        range: 'yearly',
+        data: [
+          TrendsMeasurement(
+            date: "2021",
+            pm25: 112.8,
+            pm10: 48.4,
+            no2: 34.0,
+            co: 11.3,
+            o3: 22.7,
+            improvement: "0.0%",
+          ),
+          TrendsMeasurement(
+            date: "2022",
+            pm25: 110.6,
+            pm10: 47.4,
+            no2: 33.3,
+            co: 11.1,
+            o3: 22.2,
+            improvement: "1.0%",
+          ),
+          TrendsMeasurement(
+            date: "2023",
+            pm25: 105.8,
+            pm10: 45.4,
+            no2: 31.8,
+            co: 10.6,
+            o3: 21.2,
+            improvement: "2.0%",
+          ),
+          TrendsMeasurement(
+            date: "2024",
+            pm25: 107.7,
+            pm10: 46.2,
+            no2: 32.4,
+            co: 10.8,
+            o3: 21.6,
+            improvement: "3.0%",
+          ),
+          TrendsMeasurement(
+            date: "2025",
+            pm25: 108.0,
+            pm10: 46.3,
+            no2: 32.5,
+            co: 10.8,
+            o3: 21.7,
+            improvement: "4.0%",
+          ),
+        ],
+        units: {
+          "pm25": "µg/m³",
+          "pm10": "µg/m³",
+          "no2": "ppb",
+          "co": "ppm",
+          "o3": "ppb",
+        },
+      );
+    }
+  }
+
+  void _onRangeChanged(String newRange) {
+    setState(() {
+      _selectedRange = newRange;
+      _trendsData = _fetchTrendsData(newRange);
+    });
   }
 
   Color _getAqiColor(int aqi) {
@@ -72,7 +333,6 @@ class _InsightsPageState extends State<InsightsPage> {
         final pollution = data['pollution'];
         final weather = data['weather'];
 
-        // Example regional data (you might want to fetch this from API too)
         final regionAqiList = [
           RegionAqi(
             name: "South Delhi",
@@ -102,7 +362,6 @@ class _InsightsPageState extends State<InsightsPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header with real data
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -143,21 +402,30 @@ class _InsightsPageState extends State<InsightsPage> {
                 ],
               ),
               const SizedBox(height: 16),
-              // Tab bar
               SizedBox(
                 height: 40,
                 child: ListView(
                   scrollDirection: Axis.horizontal,
                   children: [
-                    _TabChip(label: 'Today', selected: true),
-                    _TabChip(label: 'Week'),
-                    _TabChip(label: 'Month'),
-                    _TabChip(label: 'Year'),
+                    _TrendsTab(
+                      label: 'Weekly',
+                      selected: _selectedRange == 'weekly',
+                      onTap: () => _onRangeChanged('weekly'),
+                    ),
+                    _TrendsTab(
+                      label: 'Monthly',
+                      selected: _selectedRange == 'monthly',
+                      onTap: () => _onRangeChanged('monthly'),
+                    ),
+                    _TrendsTab(
+                      label: 'Yearly',
+                      selected: _selectedRange == 'yearly',
+                      onTap: () => _onRangeChanged('yearly'),
+                    ),
                   ],
                 ),
               ),
               const SizedBox(height: 16),
-              // Pollutant cards with real data
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -206,7 +474,6 @@ class _InsightsPageState extends State<InsightsPage> {
                 ],
               ),
               const SizedBox(height: 20),
-              // Current AQI with real data
               CurrentAqiAdvisoryWidget(
                 aqi: pollution['aqi'],
                 status: pollution['aqi_status'],
@@ -214,29 +481,23 @@ class _InsightsPageState extends State<InsightsPage> {
                 advisory: _getHealthAdvisory(pollution['aqi']),
               ),
               const SizedBox(height: 24),
-              // Pollution Trends (using example data - you might want to fetch real trends)
-              PollutionTrendsCard(
-                pm25Data: [60, 62, 70, 90, 120, 130, 110, 100, 95],
-                pm10Data: [80, 85, 100, 110, 140, 135, 120, 115, 110],
-                no2Data: [25, 28, 30, 40, 45, 50, 48, 44, 42],
-                o3Data: [18, 20, 22, 28, 32, 35, 33, 31, 30],
-                timeLabels: [
-                  "00:00",
-                  "04:00",
-                  "08:00",
-                  "12:00",
-                  "16:00",
-                  "20:00",
-                  "24:00",
-                ],
+              FutureBuilder<TrendsData>(
+                future: _trendsData,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (snapshot.hasError || !snapshot.hasData) {
+                    return const Text('Failed to load trends data');
+                  }
+                  return PollutionTrendsCard(trendsData: snapshot.data!);
+                },
               ),
-              // Regional Comparison with real AQI data
               RegionalComparisonCard(
                 currentAqi: pollution['aqi'],
                 location: location['city'] ?? 'Current Location',
                 regions: regionAqiList,
               ),
-              // Health Impact Analysis
               const HealthImpactAnalysisCard(),
             ],
           ),
@@ -424,32 +685,6 @@ class _CurrentAqiAdvisoryWidgetState extends State<CurrentAqiAdvisoryWidget>
   }
 }
 
-// --- Tab Chip ---
-class _TabChip extends StatelessWidget {
-  final String label;
-  final bool selected;
-  const _TabChip({required this.label, this.selected = false});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 12.0),
-      child: Chip(
-        label: Text(
-          label,
-          style: TextStyle(
-            color: selected ? Colors.white : Colors.black87,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        backgroundColor: selected ? Colors.green : Colors.grey.shade200,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 4),
-      ),
-    );
-  }
-}
-
 // --- Pollutant Card ---
 class _PollutantCard extends StatelessWidget {
   final String label;
@@ -532,23 +767,30 @@ class _PollutantCard extends StatelessWidget {
 
 // --- Pollution Trends Section ---
 class PollutionTrendsCard extends StatelessWidget {
-  final List<double> pm25Data;
-  final List<double> pm10Data;
-  final List<double> no2Data;
-  final List<double> o3Data;
-  final List<String> timeLabels;
+  final TrendsData trendsData;
 
-  const PollutionTrendsCard({
-    super.key,
-    required this.pm25Data,
-    required this.pm10Data,
-    required this.no2Data,
-    required this.o3Data,
-    required this.timeLabels,
-  });
+  const PollutionTrendsCard({super.key, required this.trendsData});
 
   @override
   Widget build(BuildContext context) {
+    // Extract data for the chart
+    final pm25Data = trendsData.data.map((m) => m.pm25).toList();
+    final pm10Data = trendsData.data.map((m) => m.pm10).toList();
+    final no2Data = trendsData.data.map((m) => m.no2).toList();
+    final o3Data = trendsData.data.map((m) => m.o3).toList();
+
+    // Create time labels based on range
+    final timeLabels = trendsData.data.map((m) {
+      if (trendsData.range == 'weekly') {
+        return m.date.split('-').last; // Day for weekly (e.g., "26", "27")
+      } else if (trendsData.range == 'monthly') {
+        final parts = m.date.split('-');
+        return '${parts[1]}/${parts[0].substring(2)}'; // MM/YY format
+      } else {
+        return m.date; // Year for yearly
+      }
+    }).toList();
+
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 16),
@@ -570,28 +812,11 @@ class PollutionTrendsCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Title and tabs
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Pollution Trends',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-              ),
-              Flexible(
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _TrendsTab(label: 'Hourly', selected: true),
-                    const SizedBox(width: 8),
-                    _TrendsTab(label: 'Daily'),
-                  ],
-                ),
-              ),
-            ],
+          Text(
+            '${trendsData.range[0].toUpperCase()}${trendsData.range.substring(1)} Trends',
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
           ),
           const SizedBox(height: 16),
-          // Graph
           SizedBox(
             height: 180,
             width: double.infinity,
@@ -601,10 +826,11 @@ class PollutionTrendsCard extends StatelessWidget {
               no2Data: no2Data,
               o3Data: o3Data,
               timeLabels: timeLabels,
+              units: trendsData.units,
+              range: trendsData.range,
             ),
           ),
           const SizedBox(height: 12),
-          // Legend
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
@@ -612,19 +838,31 @@ class PollutionTrendsCard extends StatelessWidget {
               children: [
                 _LegendDot(color: Colors.green),
                 const SizedBox(width: 4),
-                const Text('PM2.5', style: TextStyle(fontSize: 13)),
+                Text(
+                  'PM2.5 (${trendsData.units['pm25']})',
+                  style: const TextStyle(fontSize: 13),
+                ),
                 const SizedBox(width: 12),
                 _LegendDot(color: Colors.orange),
                 const SizedBox(width: 4),
-                const Text('PM10', style: TextStyle(fontSize: 13)),
+                Text(
+                  'PM10 (${trendsData.units['pm10']})',
+                  style: const TextStyle(fontSize: 13),
+                ),
                 const SizedBox(width: 12),
                 _LegendDot(color: Colors.blue),
                 const SizedBox(width: 4),
-                const Text('NO₂', style: TextStyle(fontSize: 13)),
+                Text(
+                  'NO₂ (${trendsData.units['no2']})',
+                  style: const TextStyle(fontSize: 13),
+                ),
                 const SizedBox(width: 12),
                 _LegendDot(color: Colors.deepPurple),
                 const SizedBox(width: 4),
-                const Text('O₃', style: TextStyle(fontSize: 13)),
+                Text(
+                  'O₃ (${trendsData.units['o3']})',
+                  style: const TextStyle(fontSize: 13),
+                ),
               ],
             ),
           ),
@@ -640,6 +878,8 @@ class PollutionTrendsGraph extends StatelessWidget {
   final List<double> no2Data;
   final List<double> o3Data;
   final List<String> timeLabels;
+  final Map<String, String> units;
+  final String range;
 
   const PollutionTrendsGraph({
     super.key,
@@ -648,6 +888,8 @@ class PollutionTrendsGraph extends StatelessWidget {
     required this.no2Data,
     required this.o3Data,
     required this.timeLabels,
+    required this.units,
+    required this.range,
   });
 
   @override
@@ -659,6 +901,8 @@ class PollutionTrendsGraph extends StatelessWidget {
         no2Data: no2Data,
         o3Data: o3Data,
         timeLabels: timeLabels,
+        units: units,
+        range: range,
       ),
       child: Container(),
     );
@@ -671,6 +915,8 @@ class _TrendsGraphPainter extends CustomPainter {
   final List<double> no2Data;
   final List<double> o3Data;
   final List<String> timeLabels;
+  final Map<String, String> units;
+  final String range;
 
   _TrendsGraphPainter({
     required this.pm25Data,
@@ -678,13 +924,22 @@ class _TrendsGraphPainter extends CustomPainter {
     required this.no2Data,
     required this.o3Data,
     required this.timeLabels,
+    required this.units,
+    required this.range,
   });
-
-  final double yMax = 150;
-  final double yMin = 0;
 
   @override
   void paint(Canvas canvas, Size size) {
+    // Calculate dynamic yMax based on the highest value in the data
+    final allValues = [...pm25Data, ...pm10Data, ...no2Data, ...o3Data];
+    double yMax = (allValues.reduce((a, b) => a > b ? a : b)) * 1.2;
+    double yMin = 0;
+
+    // Adjust yMax for CO if range is monthly/yearly (since CO values are higher)
+    if (range != 'weekly') {
+      yMax = (yMax * 1.5).roundToDouble();
+    }
+
     final double leftPadding = 8;
     final double bottomPadding = 24;
     final double topPadding = 8;
@@ -727,6 +982,8 @@ class _TrendsGraphPainter extends CustomPainter {
 
     // Helper to plot a line
     void plotLine(List<double> data, Color color, {Color? fillColor}) {
+      if (data.isEmpty) return;
+
       final points = <Offset>[];
       for (int i = 0; i < data.length; i++) {
         final x = leftPadding + (chartWidth) * i / (data.length - 1);
@@ -784,22 +1041,27 @@ class _TrendsGraphPainter extends CustomPainter {
 class _TrendsTab extends StatelessWidget {
   final String label;
   final bool selected;
-  const _TrendsTab({required this.label, this.selected = false});
+  final VoidCallback? onTap;
+
+  const _TrendsTab({required this.label, this.selected = false, this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-      decoration: BoxDecoration(
-        color: selected ? Colors.green : Colors.grey.shade200,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: selected ? Colors.white : Colors.black87,
-          fontWeight: FontWeight.w500,
-          fontSize: 14,
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        decoration: BoxDecoration(
+          color: selected ? Colors.green : Colors.grey.shade200,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: selected ? Colors.white : Colors.black87,
+            fontWeight: FontWeight.w500,
+            fontSize: 14,
+          ),
         ),
       ),
     );
@@ -871,9 +1133,7 @@ class RegionalComparisonCard extends StatelessWidget {
                   color: Colors.grey.shade200,
                   borderRadius: BorderRadius.circular(14),
                   image: const DecorationImage(
-                    image: AssetImage(
-                      'assets/map_placeholder.png',
-                    ), // Replace with your map asset
+                    image: AssetImage('assets/map_placeholder.png'),
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -1082,7 +1342,6 @@ class HealthImpactAnalysisCard extends StatelessWidget {
                     constraints: BoxConstraints(maxWidth: 120),
                     child: ElevatedButton(
                       onPressed: () {
-                        // TODO: Implement view details action
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text("View Details tapped")),
                         );

@@ -3,7 +3,12 @@ import 'package:google_fonts/google_fonts.dart';
 import 'profile_page.dart';
 import 'insights_page.dart';
 import 'chatbot_page.dart';
+<<<<<<< HEAD
 import 'backend_url.dart';
+=======
+import 'home_page.dart';
+import 'bg_wrapper.dart';
+>>>>>>> 6443063 ( second frontend)
 
 void main() {
   runApp(const PollutionVIZApp());
@@ -98,10 +103,22 @@ class _MainNavigationState extends State<MainNavigation> {
   }
 
   final List<Widget> _pages = [
-    const PlaceholderPage(title: "Home Page"),
-    const InsightsPage(),
-    const PlaceholderPage(title: "Scenarios Page"),
-    const ProfilePageScreen(),
+    BgWrapper(
+      child: HomePage(
+        onTryAR: () {}, // your AR callback
+        onSignInStudent: () {},
+        onSignInPolicyMaker: () {},
+        feedbackImages: [
+          AssetImage('assets/feedback1.png'),
+          AssetImage('assets/feedback2.png'),
+          AssetImage('assets/feedback3.png'),
+        ],
+      ),
+      opacity: 0.25, // HomePage: background visible
+    ),
+    InsightsPage(), // No BgWrapper, background image not visible
+    PlaceholderPage(title: "Scenarios Page"), // No BgWrapper
+    ProfilePageScreen(), // No BgWrapper
   ];
 
   void _showExportDialog(BuildContext context) {

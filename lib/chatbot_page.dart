@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'dart:async';
 
-class ChatbotPage extends StatelessWidget {
+class ChatbotPage extends StatefulWidget {
   final VoidCallback onToggleTheme;
   final bool isDarkMode;
   const ChatbotPage({
@@ -11,8 +12,49 @@ class ChatbotPage extends StatelessWidget {
   });
 
   @override
+  State<ChatbotPage> createState() => _ChatbotPageState();
+}
+
+class _ChatbotPageState extends State<ChatbotPage> {
+  final List<String> _tabs = [
+    "Help",
+    "Compare Locations",
+    "Health Risks",
+    "Policy Tips",
+    "Fun Facts",
+    "Myth Buster",
+  ];
+  int _selectedTab = 0;
+  final TextEditingController _controller = TextEditingController();
+  bool _isSearching = false;
+  String _response = "Hello! I'm Clarity, your pollution awareness assistant. I can help you with pollution definitions, location comparisons, health risks, policy suggestions, fun facts, myth busting, and daily tips. How can I assist you today?";
+
+  void _onTabSelected(int index) {
+    setState(() {
+      _selectedTab = index;
+      _response = "You are now in ${_tabs[index]} mode. Ask me anything!";
+    });
+  }
+
+  void _onSearch() {
+    if (_controller.text.trim().isEmpty) return;
+    setState(() {
+      _isSearching = true;
+      _response = "";
+    });
+    // Simulate backend search delay
+    Timer(const Duration(seconds: 2), () {
+      setState(() {
+        _isSearching = false;
+        // This should be replaced by backend response
+        _response = "Result for \"${_controller.text}\" in ${_tabs[_selectedTab]} mode.";
+      });
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final isDark = isDarkMode;
+    final isDark = widget.isDarkMode;
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
@@ -48,12 +90,21 @@ class ChatbotPage extends StatelessWidget {
               color: isDark ? Colors.white70 : Colors.black54,
             ),
             tooltip: 'Toggle Dark Mode',
-            onPressed: onToggleTheme,
+            onPressed: widget.onToggleTheme,
           ),
           const SizedBox(width: 8),
         ],
       ),
-      body: const _ChatbotBody(),
+      body: _ChatbotBody(
+        tabs: _tabs,
+        selectedTab: _selectedTab,
+        onTabSelected: _onTabSelected,
+        controller: _controller,
+        onSearch: _onSearch,
+        isSearching: _isSearching,
+        response: _response,
+        isDark: isDark,
+      ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: 0,
         selectedItemColor: isDark ? Colors.white : Colors.green,
@@ -92,142 +143,202 @@ class ChatbotPage extends StatelessWidget {
 }
 
 class _ChatbotBody extends StatelessWidget {
-  const _ChatbotBody();
+  final List<String> tabs;
+  final int selectedTab;
+  final ValueChanged<int> onTabSelected;
+  final TextEditingController controller;
+  final VoidCallback onSearch;
+  final bool isSearching;
+  final String response;
+  final bool isDark;
+
+  const _ChatbotBody({
+    required this.tabs,
+    required this.selectedTab,
+    required this.onTabSelected,
+    required this.controller,
+    required this.onSearch,
+    required this.isSearching,
+    required this.response,
+    required this.isDark,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Column(
-      children: [
-        const SizedBox(height: 32),
-        Center(
-          child: Column(
-            children: [
-              Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF2DE3A7) : Colors.green.shade100,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.smart_toy_rounded,
-                  color: isDark ? Colors.white : Colors.green,
-                  size: 48,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                "Clarity",
-                style: GoogleFonts.montserrat(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 22,
-                  color: isDark ? Colors.white : Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                "Your pollution awareness assistant",
-                style: GoogleFonts.montserrat(
-                  fontSize: 15,
-                  color: isDark ? Colors.white70 : Colors.grey.shade700,
-                ),
-              ),
-              const SizedBox(height: 18),
-              // Tabs
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    _ChatTab(label: "Help", selected: true),
-                    _ChatTab(label: "Compare Locations"),
-                    _ChatTab(label: "Health Risks"),
-                    _ChatTab(label: "Policy Tips"),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 8),
-              Container(
-                height: 3,
-                width: 80,
-                margin: const EdgeInsets.only(left: 8),
-                color: isDark ? Colors.greenAccent : Colors.green,
-              ),
-              const SizedBox(height: 18),
-              // Chat bubble
-              Container(
-                width: 320,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF23242B) : Colors.white,
-                  borderRadius: BorderRadius.circular(18),
-                  boxShadow: [
-                    if (!isDark)
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.08),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                  ],
-                ),
-                child: Text(
-                  "Hello! I'm Clarity, your pollution awareness assistant. I can help you with pollution definitions, location comparisons, health risks, policy suggestions, and daily tips. How can I assist you today?",
-                  style: GoogleFonts.montserrat(
-                    fontSize: 15,
-                    color: isDark ? Colors.white70 : Colors.black87,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          child: Center(
+            child: Column(
+              children: [
+                const SizedBox(height: 32),
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF2DE3A7) : Colors.green.shade100,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.smart_toy_rounded,
+                    color: isDark ? Colors.white : Colors.green,
+                    size: 48,
                   ),
                 ),
-              ),
-              const SizedBox(height: 18),
-              // Input
-              Container(
-                width: 320,
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF23242B) : Colors.white,
-                  borderRadius: BorderRadius.circular(18),
-                  boxShadow: [
-                    if (!isDark)
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.08),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                  ],
+                const SizedBox(height: 12),
+                Text(
+                  "Clarity",
+                  style: GoogleFonts.montserrat(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 22,
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
                 ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        decoration: InputDecoration(
-                          border: InputBorder.none,
-                          hintText: "Ask me about pollution...",
-                          hintStyle: GoogleFonts.montserrat(
-                            color: isDark ? Colors.white54 : Colors.grey,
+                const SizedBox(height: 4),
+                Text(
+                  "Your pollution awareness assistant",
+                  style: GoogleFonts.montserrat(
+                    fontSize: 15,
+                    color: isDark ? Colors.white70 : Colors.grey.shade700,
+                  ),
+                ),
+                const SizedBox(height: 18),
+                // Tabs
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: List.generate(
+                      tabs.length,
+                      (i) => GestureDetector(
+                        onTap: () => onTabSelected(i),
+                        child: _ChatTab(
+                          label: tabs[i],
+                          selected: i == selectedTab,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  height: 3,
+                  width: 80,
+                  margin: const EdgeInsets.only(left: 8),
+                  color: isDark ? Colors.greenAccent : Colors.green,
+                ),
+                const SizedBox(height: 18),
+                // Chat bubble
+                Container(
+                  constraints: BoxConstraints(
+                    maxWidth: constraints.maxWidth < 340 ? constraints.maxWidth - 32 : 340,
+                  ),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: isDark ? const Color(0xFF23242B) : Colors.white,
+                    borderRadius: BorderRadius.circular(18),
+                    boxShadow: [
+                      if (!isDark)
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.08),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                    ],
+                  ),
+                  child: isSearching
+                      ? Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(
+                                color: isDark ? Colors.greenAccent : Colors.green,
+                                strokeWidth: 3,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              "Searching...",
+                              style: GoogleFonts.montserrat(
+                                fontSize: 15,
+                                color: isDark ? Colors.white70 : Colors.black87,
+                              ),
+                            ),
+                          ],
+                        )
+                      : Text(
+                          response,
+                          style: GoogleFonts.montserrat(
+                            fontSize: 15,
+                            color: isDark ? Colors.white70 : Colors.black87,
                           ),
                         ),
-                        style: GoogleFonts.montserrat(
-                          color: isDark ? Colors.white : Colors.black87,
-                        ),
-                      ),
-                    ),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: isDark ? const Color(0xFF2DE3A7) : Colors.green,
-                        shape: BoxShape.circle,
-                      ),
-                      child: IconButton(
-                        icon: const Icon(Icons.send_rounded, color: Colors.white),
-                        onPressed: () {},
-                      ),
-                    ),
-                  ],
                 ),
-              ),
-            ],
+                const SizedBox(height: 18),
+                // Input
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: constraints.maxWidth < 340 ? constraints.maxWidth - 32 : 340,
+                    ),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF23242B) : Colors.white,
+                        borderRadius: BorderRadius.circular(18),
+                        boxShadow: [
+                          if (!isDark)
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.08),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: controller,
+                              minLines: 1,
+                              maxLines: 4,
+                              keyboardType: TextInputType.multiline,
+                              decoration: InputDecoration(
+                                border: InputBorder.none,
+                                hintText: "Ask me about pollution...",
+                                hintStyle: GoogleFonts.montserrat(
+                                  color: isDark ? Colors.white54 : Colors.grey,
+                                ),
+                                isCollapsed: true,
+                                contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                              ),
+                              style: GoogleFonts.montserrat(
+                                color: isDark ? Colors.white : Colors.black87,
+                              ),
+                            ),
+                          ),
+                          Container(
+                            decoration: BoxDecoration(
+                              color: isDark ? const Color(0xFF2DE3A7) : Colors.green,
+                              shape: BoxShape.circle,
+                            ),
+                            child: IconButton(
+                              icon: const Icon(Icons.send_rounded, color: Colors.white),
+                              onPressed: onSearch,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-      ],
+        );
+      },
     );
   }
 }

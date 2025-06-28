@@ -442,59 +442,69 @@ class NotificationPreferencesCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 14),
-          SwitchListTile(
+          // Wrap each SwitchListTile in a Row to avoid overflow
+          _SwitchRow(
             value: prefs.dailyExposureAlerts,
             onChanged: (val) => onChanged?.call("Daily Exposure Alerts", val),
-            title: Row(
-              children: [
-                Icon(Icons.notifications_active_rounded,
-                    color: Colors.green.shade400, size: 22),
-                const SizedBox(width: 8),
-                Text(
-                  "Daily Exposure Alerts",
-                  style: GoogleFonts.montserrat(fontSize: 14),
-                ),
-              ],
-            ),
-            contentPadding: EdgeInsets.zero,
-            activeColor: Colors.green,
+            icon: Icons.notifications_active_rounded,
+            iconColor: Colors.green.shade400,
+            label: "Daily Exposure Alerts",
           ),
-          SwitchListTile(
+          _SwitchRow(
             value: prefs.highPollutionWarnings,
             onChanged: (val) => onChanged?.call("High Pollution Warnings", val),
-            title: Row(
-              children: [
-                Icon(Icons.warning_amber_rounded,
-                    color: Colors.green.shade400, size: 22),
-                const SizedBox(width: 8),
-                Text(
-                  "High Pollution Warnings",
-                  style: GoogleFonts.montserrat(fontSize: 14),
-                ),
-              ],
-            ),
-            contentPadding: EdgeInsets.zero,
-            activeColor: Colors.green,
+            icon: Icons.warning_amber_rounded,
+            iconColor: Colors.green.shade400,
+            label: "High Pollution Warnings",
           ),
-          SwitchListTile(
+          _SwitchRow(
             value: prefs.weeklyReportReminders,
             onChanged: (val) => onChanged?.call("Weekly Report Reminders", val),
-            title: Row(
-              children: [
-                Icon(Icons.insert_chart_rounded,
-                    color: Colors.green.shade400, size: 22),
-                const SizedBox(width: 8),
-                Text(
-                  "Weekly Report Reminders",
-                  style: GoogleFonts.montserrat(fontSize: 14),
-                ),
-              ],
-            ),
-            contentPadding: EdgeInsets.zero,
-            activeColor: Colors.green,
+            icon: Icons.insert_chart_rounded,
+            iconColor: Colors.green.shade400,
+            label: "Weekly Report Reminders",
           ),
         ],
       ),
+    );
+  }
+}
+
+// Helper widget to avoid overflow in SwitchListTile
+class _SwitchRow extends StatelessWidget {
+  final bool value;
+  final ValueChanged<bool> onChanged;
+  final IconData icon;
+  final Color iconColor;
+  final String label;
+
+  const _SwitchRow({
+    required this.value,
+    required this.onChanged,
+    required this.icon,
+    required this.iconColor,
+    required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, color: iconColor, size: 22),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            label,
+            style: GoogleFonts.montserrat(fontSize: 14),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        Switch(
+          value: value,
+          onChanged: onChanged,
+          activeColor: Colors.green,
+        ),
+      ],
     );
   }
 }

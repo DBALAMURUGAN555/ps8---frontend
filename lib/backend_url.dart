@@ -2,15 +2,16 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-const String url = 'http://pollutionviz-3hta.onrender.com';
+const String baseURL = 'http://pollutionviz-3hta.onrender.com';
 
 Future<Map<String, dynamic>?> fetchDashboardData() async {
   try {
-    final response = await http.get(Uri.parse('$url/get_location'));
+    final response = await http.get(Uri.parse('$baseURL/get_location'));
     if (response.statusCode == 200) {
-      return json.decode(response.body); // Return parsed JSON directly
+      final jsonData = json.decode(response.body);
+      return jsonData['data']; // Return just the data part
     } else {
-      throw Exception('Failed to load data (Status: ${response.statusCode})');
+      throw Exception('Failed to load data: ${response.statusCode}');
     }
   } catch (e) {
     print('API Error: $e');

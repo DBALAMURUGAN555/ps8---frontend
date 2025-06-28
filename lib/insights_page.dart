@@ -3,190 +3,245 @@ import 'package:google_fonts/google_fonts.dart';
 import 'backend_url.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'datamodels.dart';
 
-class InsightsPage extends StatelessWidget {
+class InsightsPage extends StatefulWidget {
   const InsightsPage({super.key});
+
+  @override
+  State<InsightsPage> createState() => _InsightsPageState();
+}
+
+class _InsightsPageState extends State<InsightsPage> {
+  late Future<Map<String, dynamic>?> _dashboardData;
+
+  @override
+  void initState() {
+    super.initState();
+    _dashboardData = fetchDashboardData();
+  }
+
+  Color _getAqiColor(int aqi) {
+    if (aqi <= 50) return Colors.green;
+    if (aqi <= 100) return Colors.yellow;
+    if (aqi <= 150) return Colors.orange;
+    if (aqi <= 200) return Colors.red;
+    if (aqi <= 300) return Colors.purple;
+    return Colors.deepPurple.shade900;
+  }
+
+  String _getHealthAdvisory(int aqi) {
+    if (aqi <= 50) return 'Air quality is satisfactory.';
+    if (aqi <= 100) return 'Moderate health concern for sensitive groups.';
+    if (aqi <= 150) return 'Unhealthy for sensitive groups.';
+    if (aqi <= 200) return 'Unhealthy for everyone.';
+    if (aqi <= 300) return 'Very unhealthy with health warnings.';
+    return 'Hazardous conditions - avoid outdoor activities.';
+  }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    // Example backend data (replace with your API data)
+    return FutureBuilder<Map<String, dynamic>?>(
+      future: _dashboardData,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-    final regionAqiList = [
-      RegionAqi(
-        name: "South Delhi",
-        aqi: 154,
-        trend: "↓ 17% lower",
-        color: Colors.orange,
-        trendColor: Colors.green,
-      ),
-      RegionAqi(
-        name: "Gurgaon",
-        aqi: 142,
-        trend: "↓ 24% lower",
-        color: Colors.yellow,
-        trendColor: Colors.green,
-      ),
-      RegionAqi(
-        name: "East Delhi",
-        aqi: 195,
-        trend: "↑ 5% higher",
-        color: Colors.red,
-        trendColor: Colors.red,
-      ),
-    ];
-
-    // Example AQI and health advisory logic
-    final int currentAqi = 186;
-    final String aqiStatus = "Unhealthy";
-    final String healthAdvisory =
-        "Active children and adults, and people with respiratory disease, such as asthma, should avoid prolonged outdoor exertion.";
-    final Color aqiColor = Colors.red.shade600;
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Insights',
-                style: GoogleFonts.montserrat(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 22,
-                  color: isDark ? Colors.white : Colors.black87,
+        if (snapshot.hasError || !snapshot.hasData) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text('Failed to load data'),
+                ElevatedButton(
+                  onPressed: () => setState(() {
+                    _dashboardData = fetchDashboardData();
+                  }),
+                  child: const Text('Retry'),
                 ),
-              ),
+              ],
+            ),
+          );
+        }
+
+        final data = snapshot.data!;
+        final location = data['location'];
+        final pollution = data['pollution'];
+        final weather = data['weather'];
+
+        // Example regional data (you might want to fetch this from API too)
+        final regionAqiList = [
+          RegionAqi(
+            name: "South Delhi",
+            aqi: (pollution['aqi'] * 1.1).round(),
+            trend: "↓ 17% lower",
+            color: Colors.orange,
+            trendColor: Colors.green,
+          ),
+          RegionAqi(
+            name: "Gurgaon",
+            aqi: (pollution['aqi'] * 0.9).round(),
+            trend: "↓ 24% lower",
+            color: Colors.yellow,
+            trendColor: Colors.green,
+          ),
+          RegionAqi(
+            name: "East Delhi",
+            aqi: (pollution['aqi'] * 1.3).round(),
+            trend: "↑ 5% higher",
+            color: Colors.red,
+            trendColor: Colors.red,
+          ),
+        ];
+
+        return SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header with real data
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Icon(
-                    Icons.location_on,
-                    size: 18,
-                    color: isDark ? Colors.white70 : Colors.black54,
-                  ),
-                  const SizedBox(width: 4),
                   Text(
-                    'Delhi, India',
+                    'Insights',
                     style: GoogleFonts.montserrat(
-                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 22,
                       color: isDark ? Colors.white : Colors.black87,
-                      fontWeight: FontWeight.w500,
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  Text(
-                    '• June 21, 2025',
-                    style: GoogleFonts.montserrat(
-                      fontSize: 13,
-                      color: isDark ? Colors.white54 : Colors.black54,
-                    ),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.location_on,
+                        size: 18,
+                        color: isDark ? Colors.white70 : Colors.black54,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        location['city'] ?? 'Unknown Location',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 15,
+                          color: isDark ? Colors.white : Colors.black87,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '• ${data['date'] ?? 'Unknown Date'}',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 13,
+                          color: isDark ? Colors.white54 : Colors.black54,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
+              const SizedBox(height: 16),
+              // Tab bar
+              SizedBox(
+                height: 40,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  children: [
+                    _TabChip(label: 'Today', selected: true),
+                    _TabChip(label: 'Week'),
+                    _TabChip(label: 'Month'),
+                    _TabChip(label: 'Year'),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              // Pollutant cards with real data
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _PollutantCard(
+                    label: 'PM2.5',
+                    value: pollution['pm25'].toStringAsFixed(1),
+                    unit: 'µg/m³',
+                    color: Colors.red.shade100,
+                    icon: Icons.cloud,
+                    trend: '↑ 12% vs yesterday',
+                    trendColor: Colors.red,
+                  ),
+                  _PollutantCard(
+                    label: 'PM10',
+                    value: pollution['pm10'].toStringAsFixed(1),
+                    unit: 'µg/m³',
+                    color: Colors.orange.shade100,
+                    icon: Icons.cloud,
+                    trend: '↑ 8% vs yesterday',
+                    trendColor: Colors.orange,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _PollutantCard(
+                    label: 'NO₂',
+                    value: pollution['no2'].toStringAsFixed(1),
+                    unit: 'ppb',
+                    color: Colors.yellow.shade100,
+                    icon: Icons.cloud,
+                    trend: '↓ 3% vs yesterday',
+                    trendColor: Colors.green,
+                  ),
+                  _PollutantCard(
+                    label: 'O₃',
+                    value: pollution['o3'].toStringAsFixed(1),
+                    unit: 'ppb',
+                    color: Colors.blue.shade100,
+                    icon: Icons.cloud,
+                    trend: '↓ 5% vs yesterday',
+                    trendColor: Colors.blue,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              // Current AQI with real data
+              CurrentAqiAdvisoryWidget(
+                aqi: pollution['aqi'],
+                status: pollution['aqi_status'],
+                color: _getAqiColor(pollution['aqi']),
+                advisory: _getHealthAdvisory(pollution['aqi']),
+              ),
+              const SizedBox(height: 24),
+              // Pollution Trends (using example data - you might want to fetch real trends)
+              PollutionTrendsCard(
+                pm25Data: [60, 62, 70, 90, 120, 130, 110, 100, 95],
+                pm10Data: [80, 85, 100, 110, 140, 135, 120, 115, 110],
+                no2Data: [25, 28, 30, 40, 45, 50, 48, 44, 42],
+                o3Data: [18, 20, 22, 28, 32, 35, 33, 31, 30],
+                timeLabels: [
+                  "00:00",
+                  "04:00",
+                  "08:00",
+                  "12:00",
+                  "16:00",
+                  "20:00",
+                  "24:00",
+                ],
+              ),
+              // Regional Comparison with real AQI data
+              RegionalComparisonCard(
+                currentAqi: pollution['aqi'],
+                location: location['city'] ?? 'Current Location',
+                regions: regionAqiList,
+              ),
+              // Health Impact Analysis
+              const HealthImpactAnalysisCard(),
             ],
           ),
-          const SizedBox(height: 16),
-          // Tab bar
-          SizedBox(
-            height: 40,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              children: [
-                _TabChip(label: 'Today', selected: true),
-                _TabChip(label: 'Week'),
-                _TabChip(label: 'Month'),
-                _TabChip(label: 'Year'),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          // Individual Insights (Pollutant cards)
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _PollutantCard(
-                label: 'PM2.5',
-                value: '86',
-                unit: 'µg/m³',
-                color: Colors.red.shade100,
-                icon: Icons.cloud,
-                trend: '↑ 12% vs yesterday',
-                trendColor: Colors.red,
-              ),
-              _PollutantCard(
-                label: 'PM10',
-                value: '124',
-                unit: 'µg/m³',
-                color: Colors.orange.shade100,
-                icon: Icons.cloud,
-                trend: '↑ 8% vs yesterday',
-                trendColor: Colors.orange,
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _PollutantCard(
-                label: 'NO₂',
-                value: '42',
-                unit: 'ppb',
-                color: Colors.yellow.shade100,
-                icon: Icons.cloud,
-                trend: '↓ 3% vs yesterday',
-                trendColor: Colors.green,
-              ),
-              _PollutantCard(
-                label: 'O₃',
-                value: '31',
-                unit: 'ppb',
-                color: Colors.blue.shade100,
-                icon: Icons.cloud,
-                trend: '↓ 5% vs yesterday',
-                trendColor: Colors.blue,
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          // Current AQI + Health Advisory (nested)
-          CurrentAqiAdvisoryWidget(
-            aqi: currentAqi,
-            status: aqiStatus,
-            color: aqiColor,
-            advisory: healthAdvisory,
-          ),
-          const SizedBox(height: 24),
-          // Pollution Trends
-          PollutionTrendsCard(
-            pm25Data: [60, 62, 70, 90, 120, 130, 110, 100, 95],
-            pm10Data: [80, 85, 100, 110, 140, 135, 120, 115, 110],
-            no2Data: [25, 28, 30, 40, 45, 50, 48, 44, 42],
-            o3Data: [18, 20, 22, 28, 32, 35, 33, 31, 30],
-            timeLabels: [
-              "00:00",
-              "04:00",
-              "08:00",
-              "12:00",
-              "16:00",
-              "20:00",
-              "24:00",
-            ],
-          ),
-          // Regional Comparison
-          RegionalComparisonCard(
-            currentAqi: currentAqi,
-            location: "Connaught Place",
-            regions: regionAqiList,
-          ),
-          // Health Impact Analysis
-          const HealthImpactAnalysisCard(),
-        ],
-      ),
+        );
+      },
     );
   }
 }

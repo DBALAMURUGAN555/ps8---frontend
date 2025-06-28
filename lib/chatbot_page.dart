@@ -1,9 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'dart:async';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'PollutionVIZ',
+      theme: ThemeData(
+        primarySwatch: Colors.green,
+        brightness: Brightness.light,
+      ),
+      darkTheme: ThemeData(
+        primarySwatch: Colors.green,
+        brightness: Brightness.dark,
+      ),
+      home: const ChatbotPage(onToggleTheme: null, isDarkMode: false),
+    );
+  }
+}
 
 class ChatbotPage extends StatefulWidget {
-  final VoidCallback onToggleTheme;
+  final VoidCallback? onToggleTheme;
   final bool isDarkMode;
   const ChatbotPage({
     super.key,
@@ -27,34 +52,55 @@ class _ChatbotPageState extends State<ChatbotPage> {
   int _selectedTab = 0;
   final TextEditingController _controller = TextEditingController();
   bool _isSearching = false;
-  String _response = "Hello! I'm Clarity, your pollution awareness assistant. I can help you with pollution definitions, location comparisons, health risks, policy suggestions, fun facts, myth busting, and daily tips. How can I assist you today?";
+  String _response =
+      "Hello! I'm Clarity, your pollution awareness assistant. How can I help you today?";
+  final String _apiUrl = "https://pollutionviz-3hta.onrender.com/asking";
 
   void _onTabSelected(int index) {
     setState(() {
       _selectedTab = index;
-      _response = "You are now in ${_tabs[index]} mode. Ask me anything!";
+      _response = "You selected ${_tabs[index]}. What would you like to know?";
     });
   }
 
-  void _onSearch() {
+  Future<void> _onSearch() async {
     if (_controller.text.trim().isEmpty) return;
+
     setState(() {
       _isSearching = true;
-      _response = "";
+      _response = "Processing...";
     });
-    // Simulate backend search delay
-    Timer(const Duration(seconds: 2), () {
+
+    try {
+      final response = await http.get(
+        Uri.parse(
+          "$_apiUrl?prompt=${Uri.encodeComponent(_controller.text.trim())}",
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          _response = response.body;
+          _isSearching = false;
+          _controller.clear();
+        });
+      } else {
+        setState(() {
+          _response = "Error ${response.statusCode}: ${response.body}";
+          _isSearching = false;
+        });
+      }
+    } catch (e) {
       setState(() {
+        _response = "Error: $e";
         _isSearching = false;
-        // This should be replaced by backend response
-        _response = "Result for \"${_controller.text}\" in ${_tabs[_selectedTab]} mode.";
       });
-    });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDark = widget.isDarkMode;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
@@ -64,7 +110,7 @@ class _ChatbotPageState extends State<ChatbotPage> {
           padding: const EdgeInsets.only(left: 16.0),
           child: Row(
             children: [
-              FlutterLogo(size: 28),
+              const FlutterLogo(size: 28),
               const SizedBox(width: 10),
               Flexible(
                 child: Text(
@@ -86,10 +132,10 @@ class _ChatbotPageState extends State<ChatbotPage> {
         actions: [
           IconButton(
             icon: Icon(
-              isDark ? Icons.dark_mode : Icons.light_mode,
+              isDark ? Icons.light_mode : Icons.dark_mode,
               color: isDark ? Colors.white70 : Colors.black54,
             ),
-            tooltip: 'Toggle Dark Mode',
+            tooltip: 'Toggle Theme',
             onPressed: widget.onToggleTheme,
           ),
           const SizedBox(width: 8),
@@ -134,9 +180,7 @@ class _ChatbotPageState extends State<ChatbotPage> {
           fontFamily: 'Montserrat',
           fontWeight: FontWeight.w600,
         ),
-        unselectedLabelStyle: TextStyle(
-          fontFamily: 'Montserrat',
-        ),
+        unselectedLabelStyle: TextStyle(fontFamily: 'Montserrat'),
       ),
     );
   }
@@ -176,7 +220,9 @@ class _ChatbotBody extends StatelessWidget {
                   width: 80,
                   height: 80,
                   decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF2DE3A7) : Colors.green.shade100,
+                    color: isDark
+                        ? const Color(0xFF2DE3A7)
+                        : Colors.green.shade100,
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -230,7 +276,9 @@ class _ChatbotBody extends StatelessWidget {
                 // Chat bubble
                 Container(
                   constraints: BoxConstraints(
-                    maxWidth: constraints.maxWidth < 340 ? constraints.maxWidth - 32 : 340,
+                    maxWidth: constraints.maxWidth < 340
+                        ? constraints.maxWidth - 32
+                        : 340,
                   ),
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -253,7 +301,9 @@ class _ChatbotBody extends StatelessWidget {
                               width: 22,
                               height: 22,
                               child: CircularProgressIndicator(
-                                color: isDark ? Colors.greenAccent : Colors.green,
+                                color: isDark
+                                    ? Colors.greenAccent
+                                    : Colors.green,
                                 strokeWidth: 3,
                               ),
                             ),
@@ -281,10 +331,15 @@ class _ChatbotBody extends StatelessWidget {
                   padding: const EdgeInsets.only(bottom: 16),
                   child: ConstrainedBox(
                     constraints: BoxConstraints(
-                      maxWidth: constraints.maxWidth < 340 ? constraints.maxWidth - 32 : 340,
+                      maxWidth: constraints.maxWidth < 340
+                          ? constraints.maxWidth - 32
+                          : 340,
                     ),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: isDark ? const Color(0xFF23242B) : Colors.white,
                         borderRadius: BorderRadius.circular(18),
@@ -312,20 +367,28 @@ class _ChatbotBody extends StatelessWidget {
                                   color: isDark ? Colors.white54 : Colors.grey,
                                 ),
                                 isCollapsed: true,
-                                contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  vertical: 8,
+                                ),
                               ),
                               style: GoogleFonts.montserrat(
                                 color: isDark ? Colors.white : Colors.black87,
                               ),
+                              onSubmitted: (_) => onSearch(),
                             ),
                           ),
                           Container(
                             decoration: BoxDecoration(
-                              color: isDark ? const Color(0xFF2DE3A7) : Colors.green,
+                              color: isDark
+                                  ? const Color(0xFF2DE3A7)
+                                  : Colors.green,
                               shape: BoxShape.circle,
                             ),
                             child: IconButton(
-                              icon: const Icon(Icons.send_rounded, color: Colors.white),
+                              icon: const Icon(
+                                Icons.send_rounded,
+                                color: Colors.white,
+                              ),
                               onPressed: onSearch,
                             ),
                           ),
@@ -347,6 +410,7 @@ class _ChatTab extends StatelessWidget {
   final String label;
   final bool selected;
   const _ChatTab({required this.label, this.selected = false});
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;

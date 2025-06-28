@@ -3,12 +3,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'profile_page.dart';
 import 'insights_page.dart';
 import 'chatbot_page.dart';
-<<<<<<< HEAD
-import 'backend_url.dart';
-=======
 import 'home_page.dart';
 import 'bg_wrapper.dart';
->>>>>>> 6443063 ( second frontend)
+import 'scenerios.dart';
 
 void main() {
   runApp(const PollutionVIZApp());
@@ -117,7 +114,7 @@ class _MainNavigationState extends State<MainNavigation> {
       opacity: 0.25, // HomePage: background visible
     ),
     InsightsPage(), // No BgWrapper, background image not visible
-    PlaceholderPage(title: "Scenarios Page"), // No BgWrapper
+    ScenariosPage(), // No BgWrapper
     ProfilePageScreen(), // No BgWrapper
   ];
 

@@ -1,9 +1,98 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 const String baseURL = 'https://pollutionviz-3hta.onrender.com';
+
+// Recommendation lists (10 sets of 3 recommendations each)
+final List<List<String>> doRecommendations = [
+  ["Wear N95 masks outdoors", "Use air purifiers", "Keep windows closed"],
+  [
+    "Check air quality index",
+    "Stay indoors during peaks",
+    "Hydrate frequently",
+  ],
+  [
+    "Use saline nasal rinses",
+    "Wash face after outdoors",
+    "Shower after exposure",
+  ],
+  ["Create clean air rooms", "Use HEPA filters", "Wet-clean surfaces"],
+  ["Monitor pollution forecasts", "Seal home openings", "Use indoor plants"],
+  [
+    "Wear protective eyewear",
+    "Change clothes after outdoors",
+    "Use humidifiers",
+  ],
+  [
+    "Keep medications handy",
+    "Install window filters",
+    "Avoid peak pollution hours",
+  ],
+  [
+    "Use antioxidant-rich diet",
+    "Practice breathing exercises",
+    "Maintain hydration",
+  ],
+  [
+    "Wear full-sleeve clothing",
+    "Use air quality apps",
+    "Create safe zones at home",
+  ],
+  [
+    "Wash fruits thoroughly",
+    "Use nasal filters",
+    "Keep emergency contacts ready",
+  ],
+];
+
+final List<List<String>> dontRecommendations = [
+  ["Avoid outdoor exercise", "Don't burn materials", "No smoking indoors"],
+  ["Skip outdoor drying", "Avoid congested areas", "Don't use fireplaces"],
+  ["Don't neglect symptoms", "Avoid dusty areas", "No candle burning"],
+  ["Don't idle vehicles", "Avoid peak traffic", "No outdoor cooking"],
+  [
+    "Don't use wood stoves",
+    "Avoid open windows at night",
+    "No vigorous activities",
+  ],
+  ["Don't rub eyes outdoors", "Avoid polluted areas", "No incense sticks"],
+  ["Don't ignore air alerts", "Avoid morning walks", "No diesel generators"],
+  ["Don't use hairsprays", "Avoid pesticide sprays", "No burning garbage"],
+  ["Don't skip medications", "Avoid construction sites", "No fireworks"],
+  [
+    "Don't use strong cleaners",
+    "Avoid pet outdoor time",
+    "No aerosol products",
+  ],
+];
+
+final List<List<String>> minimizeRecommendations = [
+  ["Reduce vehicle use", "Limit outdoor time", "Postpone activities"],
+  ["Use public transport", "Combine errands", "Work from home"],
+  [
+    "Choose less busy routes",
+    "Avoid rush hours",
+    "Teleconference when possible",
+  ],
+  ["Conserve electricity", "Reduce AC usage", "Limit generator use"],
+  ["Cut down fireplace use", "Minimize outdoor events", "Reduce dust creation"],
+  [
+    "Limit industrial area visits",
+    "Decrease plastic burning",
+    "Shorten shower time",
+  ],
+  ["Reduce lawn mowing", "Minimize printer use", "Lower vacuuming frequency"],
+  [
+    "Decrease aerosol products",
+    "Limit barbecue grilling",
+    "Reduce idling time",
+  ],
+  ["Minimize chemical cleaners", "Cut back on painting", "Lower solvent use"],
+  ["Reduce candle usage", "Limit fireworks", "Decrease bonfire activities"],
+];
 
 class ScenariosPage extends StatefulWidget {
   const ScenariosPage({super.key});
@@ -17,19 +106,29 @@ class _ScenariosPageState extends State<ScenariosPage> {
   late Future<Map<String, dynamic>> _recommendedActions;
   String _errorMessage = '';
   bool _actionsExpanded = false;
+  int _retryCount = 0;
+  final int _maxRetries = 3;
 
   @override
   void initState() {
     super.initState();
-    _scenariosData = _fetchScenariosData();
-    _recommendedActions = _fetchRecommendedActions();
+    _loadData();
+  }
+
+  void _loadData() {
+    setState(() {
+      _retryCount = 0;
+      _scenariosData = _fetchScenariosData();
+      _recommendedActions = _fetchRecommendedActions();
+      _errorMessage = '';
+    });
   }
 
   Future<List<dynamic>> _fetchScenariosData() async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseURL/get_scenario_presets'),
-      );
+      final response = await http
+          .get(Uri.parse('$baseURL/get_scenario_presets'))
+          .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -42,65 +141,70 @@ class _ScenariosPageState extends State<ScenariosPage> {
         throw Exception('Failed to load scenarios: ${response.statusCode}');
       }
     } catch (e) {
-      setState(() {
-        _errorMessage = 'Error loading scenarios: ${e.toString()}';
-      });
-      return [];
+      if (_retryCount < _maxRetries) {
+        _retryCount++;
+        await Future.delayed(const Duration(seconds: 1));
+        return _fetchScenariosData();
+      } else {
+        throw Exception('Failed after $_maxRetries attempts: $e');
+      }
     }
   }
 
   Future<Map<String, dynamic>> _fetchRecommendedActions() async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseURL/citizen_actions'),
-        headers: {'Content-Type': 'application/json'},
-      );
+      final response = await http
+          .post(
+            Uri.parse('$baseURL/citizen_actions'),
+            headers: {'Content-Type': 'application/json'},
+          )
+          .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         return json.decode(response.body);
       } else if (response.statusCode == 307) {
         final redirectUrl = response.headers['location'];
         if (redirectUrl != null) {
-          final redirectedResponse = await http.post(
-            Uri.parse(redirectUrl),
-            headers: {'Content-Type': 'application/json'},
-          );
+          final redirectedResponse = await http
+              .post(
+                Uri.parse(redirectUrl),
+                headers: {'Content-Type': 'application/json'},
+              )
+              .timeout(const Duration(seconds: 10));
+
           if (redirectedResponse.statusCode == 200) {
             return json.decode(redirectedResponse.body);
           }
+          throw Exception('Redirect failed: ${redirectedResponse.statusCode}');
         }
-        throw Exception('Failed to follow redirect');
+        throw Exception('No redirect location provided');
       } else {
         throw Exception('Failed with status: ${response.statusCode}');
       }
     } catch (e) {
-      return {
-        "do": [
-          "Wear an N95 mask when outdoors",
-          "Keep windows and doors closed",
-          "Use air purifiers if available",
-        ],
-        "dont": [
-          "Avoid outdoor exercise",
-          "Don't burn candles or incense",
-          "Avoid smoking indoors",
-        ],
-        "minimize": [
-          "Reduce vehicle use",
-          "Postpone outdoor activities",
-          "Limit use of gas stoves",
-        ],
-      };
+      return getRandomRecommendations();
     }
   }
 
-  Future<void> _refreshData() async {
-    setState(() {
-      _scenariosData = _fetchScenariosData();
-      _recommendedActions = _fetchRecommendedActions();
-      _errorMessage = '';
-    });
-    await Future.wait([_scenariosData, _recommendedActions]);
+  Map<String, dynamic> getRandomRecommendations() {
+    final random = Random();
+
+    // Function to get 3 unique random items from a category
+    List<String> getThreeRandomItems(List<List<String>> category) {
+      final items = <String>{};
+      while (items.length < 3) {
+        final randomMainIndex = random.nextInt(category.length);
+        final randomSubIndex = random.nextInt(category[randomMainIndex].length);
+        items.add(category[randomMainIndex][randomSubIndex]);
+      }
+      return items.toList();
+    }
+
+    return {
+      "do": getThreeRandomItems(doRecommendations),
+      "dont": getThreeRandomItems(dontRecommendations),
+      "minimize": getThreeRandomItems(minimizeRecommendations),
+    };
   }
 
   Color _getAqiColor(String aqiLabel) {
@@ -579,8 +683,8 @@ class _ScenariosPageState extends State<ScenariosPage> {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh, size: 22),
-            onPressed: _refreshData,
-            tooltip: 'Refresh scenarios',
+            onPressed: _loadData,
+            tooltip: 'Refresh data',
           ),
         ],
       ),
@@ -631,7 +735,7 @@ class _ScenariosPageState extends State<ScenariosPage> {
                         ),
                         const SizedBox(height: 24),
                         ElevatedButton(
-                          onPressed: _refreshData,
+                          onPressed: _loadData,
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 24,
@@ -668,7 +772,9 @@ class _ScenariosPageState extends State<ScenariosPage> {
               }
 
               return RefreshIndicator(
-                onRefresh: _refreshData,
+                onRefresh: () async {
+                  _loadData();
+                },
                 color: Theme.of(context).primaryColor,
                 child: ListView.builder(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
@@ -690,10 +796,46 @@ class _ScenariosPageState extends State<ScenariosPage> {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return Container(
                     height: 60,
-                    color: isDark ? Colors.grey[850] : Colors.blue.shade50,
+                    decoration: BoxDecoration(
+                      color: isDark ? Colors.grey[850] : Colors.blue.shade50,
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(16),
+                        topRight: Radius.circular(16),
+                      ),
+                    ),
                     child: const Center(child: CircularProgressIndicator()),
                   );
                 }
+
+                if (snapshot.hasError) {
+                  return Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: isDark ? Colors.grey[850] : Colors.blue.shade50,
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(16),
+                        topRight: Radius.circular(16),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Failed to load actions',
+                          style: GoogleFonts.montserrat(
+                            fontSize: 14,
+                            color: Colors.red,
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: _loadData,
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
                 return _buildRecommendedActionsPanel(snapshot.data, context);
               },
             ),
